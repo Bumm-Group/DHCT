@@ -1,0 +1,95 @@
+This file describes the contents of the output data structure from DHCT. It can be named however you like.
+For example, if you run
+
+ Data_Out = DHCT(XScale, Period, SlowScanDirection, FastScanDirection, NNdist, Img1, Img2);
+
+The output data structure will be named Data_Out. You can access the subfields of data structures with a period. 
+For example, to access the corrected Img1 from the data structure Data_Out, use Data_Out.ReshapedImage{1}
+Note all variable names described in this file are case sensitive. 
+
+-----
+
+These variables do not depend on whether a single image or a trace-retrace pair were analyzed.
+
+
+SlowPixels - 1×1 double. Original size of input image(s), in pixels, along the slow scan direction.
+
+solution_vector - 1×9 double by default. Contains the parameters of the best-fit hysteresis, creep and 
+thermal drift functions. If you modify the fitting functions, the length of solution_vector will be
+equal to the number of free parameters of your fit.
+
+-----
+
+These variables depend on whether a single image or a trace-retrace pair were analyzed. n is number of images,
+1 for single, 2 for trace-retrace pair.
+
+fit_data - 1×n cell. Each cell contains a "fitresult" data structure containing the following entries:
+	Amplitude - double vector of best-fit Gaussian amplitude for a given feature
+	Angle - double vector of best-fit angle between SigmaX axis fo the Gaussian and the +x axis for a 
+		given feature 
+	SigmaX - double vector of best-fit Gaussian standard deviation in the SigmaX direction for a given feature
+	SigmaY - double vector of best-fit Gaussian standard deviation perpendicular to the SigmaX direction for
+		a given feature
+	X - double vector of X coordinates of base of best-fit Gaussian for a given feature
+	Y - double vector of Y coordinates of base of best-fit Gaussian for a given feature
+	Z - double vector of Z coordinates of base of best-fit Gaussian for a given feature
+	Index - double vector of unique indices of features. These are not changed and can therefore be used
+		to keep track of image features between data structures.
+	Time - double vector of feature approximate acquisition times, assigned by the acquisition time of the 
+		nearest pixel to the center of the Gaussian.
+	Fast_Time - double vector of feature approximate acquisition times along the fast scan direction.
+		Remainder of time after dividing by amount of time it takes to acquire one fast scan line.
+
+	Each of these are 1×(number of features) vectors. If there are 12047 features, each vector is 1×12047.
+
+mask_fit_data - 1×n cell. Each cell contains a "fitresult" data structure (Described in the description for 
+	fit_data) with the following additions:
+
+	Num_NN - sparse double vector of number of nearest neighbors of a given feature.
+	NN_Index - cell vector. Each cell contains a 1×(Num_NN) vector of the Index value of each of its nearest
+		neighbors.
+
+	In addition, only features which lie in the positively-masked regions of a supplied region mask will be 
+	included. However, if no mask is supplied, all features will be included.
+
+	Each of these are 1×(number of features within masked regions) vectors. 
+
+
+mask_drift_data - 1×n cell. The data structure is identical to mask_fit_data, except that X and Y have been
+	modified to line up with the drift-corrected image.
+
+feat_pos_nn - 1×n cell. Each cell contains a data structure with these elements:
+
+	feat_set - double vector. feat_set lists the vector element locations where Num_NN == 6 
+		(from mask_fit_data). The length corresponds with how many times this happens.
+	Index - double vector. The value of Index from mask_fit_data corresponding to each element of feat_set.
+	cen_x - double vector. The value of X from mask_fit_data corresponding to each element of feat_set.
+	cen_y - double vector. The value of Y from mask_fit_data corresponding to each element of feat_set.
+	nn_x - double matrix. The value of X from mask_fit_data corresponding to the nearest neighbors of 
+		each element of feat_set.
+	nn_y - double matrix. The value of Y from mask_fit_data corresponding to the nearest neighbors of 
+		each element of feat_set.
+
+	Since each feature has 6 nearest neighbors, nn_x and nn_y have 6 rows.
+
+driftX - 1×n cell. Each cell contains a vector of measured drift velocities along the fast scan direction.
+	The vector has size 1×length(feat_set) (from feat_pos_nn)
+
+driftY - 1×n cell. Each cell contains a vector of measured drift velocities along the slow scan direction.
+	The vector has size 1×length(feat_set) (from feat_pos_nn)
+
+scaleFactor - 1×n cell. Each cell contains a vector of measured scale factors along the fast scan direction.
+	The vector has size 1×length(feat_set) (from feat_pos_nn)
+
+xCoords - 1xn cell. Each cell contains the modified x coordinates for each pixel in the original image and an 
+	additional pixel at the beginning and the end of each fast scan direction row.
+
+yCoords - 1xn cell. Each cell contains the modified y coordinates for each pixel in the original image and an 
+	additional pixel at the beginning and the end of each fast scan direction row.
+
+xOffset - 1×n double vector. Horizontal offset between input image and output corrected image.
+
+yOffset - 1×n double vector. vertical offset between input image and output corrected image.
+
+ReshapedImage - 1×n cell. Each cell contains a drift-corrected image. The image's size depends on the measured 
+	distortion parameters, but both images from a trace-retrace pair should be nearly the same size.
