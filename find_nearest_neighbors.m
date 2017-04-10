@@ -1,6 +1,6 @@
 function nn = find_nearest_neighbors(iLoc, jLoc, dist, r_0, varargin)
 
-%     ver 9/16/2016
+%     ver 4/10/2017
 %
 %     copyright (c) 2016 Mitchell P. Yothers & Lloyd A. Bumm
 %
@@ -111,10 +111,12 @@ iLoc_nn(1:length(nn_pairs)) = iLoc(nn_pairs);
 jLoc_nn(1:length(nn_pairs)) = jLoc(nn_pairs);
 dist_nn(1:length(nn_pairs)) = dist(nn_pairs);
 
+maxL = max([iLoc, jLoc].');
+
 % Generate NN matrix
 
 iLoc_nn_total = [iLoc_nn jLoc_nn];
 jLoc_nn_total = [jLoc_nn iLoc_nn];
 dist_nn_total = [dist_nn dist_nn];
 
-nn = sparse(iLoc_nn_total, jLoc_nn_total, dist_nn_total);
+nn = sparse(iLoc_nn_total, jLoc_nn_total, dist_nn_total, maxL, maxL);
