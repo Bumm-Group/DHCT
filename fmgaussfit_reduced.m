@@ -1,4 +1,4 @@
-function fitresult = fmgaussfit_reduced(xx, yy, zz, initial_values)
+function [fitresult, varargout] = fmgaussfit_reduced(xx, yy, zz, initial_values)
 % FMGAUSSFIT Create/alter optimization OPTIONS structure.
 %   [fitresult,..., rr] = fmgaussfit(xx,yy,zz) uses ZZ for the surface 
 %   height. XX and YY are vectors or matrices defining the x and y 
@@ -37,7 +37,7 @@ function fitresult = fmgaussfit_reduced(xx, yy, zz, initial_values)
 
 % link to the mathworks download page http://www.mathworks.com/matlabcentral/fileexchange/41938-fit-2d-gaussian-with-optimization-toolbox
 
-% Edited 2016, Mitchell Yothers
+% Edited 2020, Mitchell Yothers
 %
 % Removed parts of this code that were unneccessary for molecule finding to
 % increase speed and modified assumptions to more accurately reflect 
@@ -90,7 +90,9 @@ options = optimset('Algorithm','trust-region-reflective',...
     'TolCon',tols ,...
     'UseParallel','always');
 
-fitresult = lsqcurvefit(@gaussian2D, StartPoint, xyData, zData, Lower, Upper, options);
+[fitresult, resnorm] = lsqcurvefit(@gaussian2D, StartPoint, xyData, zData, Lower, Upper, options);
+
+varargout{1} = resnorm;
 
 end
 
@@ -99,7 +101,7 @@ function z = gaussian2D(s, xy)
 % compute 2D gaussian
 xdata = (xy{1} - s(5)) .* cosd(s(2)) - (xy{2} - s(6)) .* sind(s(2));
 ydata = (xy{1} - s(5)) .* sind(s(2)) + (xy{2} - s(6)) .* cosd(s(2));
-z = s(1) .* gaussmf(xdata, [s(3) 0]) .* gaussmf(ydata, [s(4) 0]) + s(7);
+z = s(1) .* exp(-(xdata).^2 ./ 2 ./ s(3).^2) .* exp(-(ydata).^2 ./ 2 ./ s(4).^2) + s(7);
 
 end
 

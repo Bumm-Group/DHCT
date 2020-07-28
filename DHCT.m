@@ -1,6 +1,6 @@
 function out = DHCT(XScale, Period, SlowScanDir, FastScanDir, spacing, varargin)
 
-%     ver 9/16/2016
+%     ver 7/20/2020
 %
 %     copyright (c) 2016 Mitchell P. Yothers & Lloyd A. Bumm
 %
@@ -102,32 +102,33 @@ elseif nargin > 7
     Mask{2} = varargin{4};
     num_images = 2;
 else
+    Mask{1} = logical(Image{1} .* 0 + 1);
     num_images = 1;
 end
 
 % Turn directional strings into a number for more convenient use in
 % subsequent code
 
-if strcmpi(SlowScanDir, 'Right');
+if strcmpi(SlowScanDir, 'Right')
     SlowScan = 0;
-elseif strcmpi(SlowScanDir, 'Left');
+elseif strcmpi(SlowScanDir, 'Left')
     SlowScan = 1;
-elseif strcmpi(SlowScanDir, 'Up');
+elseif strcmpi(SlowScanDir, 'Up')
     SlowScan = 2;
-elseif strcmpi(SlowScanDir, 'Down');
+elseif strcmpi(SlowScanDir, 'Down')
     SlowScan = 3;
 else
     error('Slow Scan Direction not recognized.');
 end
 
 for i = 1:num_images
-    if strcmpi(FastScanDir{i}, 'Right');
+    if strcmpi(FastScanDir{i}, 'Right')
         FastScan(i) = 0; %#ok<*AGROW>
-    elseif strcmpi(FastScanDir{i}, 'Left');
+    elseif strcmpi(FastScanDir{i}, 'Left')
         FastScan(i) = 1;
-    elseif strcmpi(FastScanDir{i}, 'Up');
+    elseif strcmpi(FastScanDir{i}, 'Up')
         FastScan(i) = 2;
-    elseif strcmpi(FastScanDir{i}, 'Down');
+    elseif strcmpi(FastScanDir{i}, 'Down')
         FastScan(i) = 3;
     else
         error('Fast Scan Direction not recognized.');
@@ -201,4 +202,4 @@ for i = 1:num_images
         XScale, Period, out.SlowPixels, SlowScan, FastScan(i), out.xOffset(i), out.yOffset(i));
 end
 
-fprintf('\nDone!\n');
+fprintf('\nDone!\n')

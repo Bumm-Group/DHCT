@@ -1,7 +1,7 @@
 function [soln, driftX, driftY, scaleFactor] = molecule_local_distortion(...
     fitresult, XScale, Period, YPixels, spacing, feat_pos_nn, varargin)
 
-%     ver 9/16/2016
+%     ver 7/20/2020
 %
 %     copyright (c) 2016 Mitchell P. Yothers & Lloyd A. Bumm
 %
@@ -172,6 +172,25 @@ for i = 1:NumImages
         end
     end 
     
+    t_total = max(tPts_h{i}) - min(tPts_h{i});
+    
+    lbt = 0.01;
+    ubt = 0.99;
+    
+    t_lb = min(tPts_h{i}) + lbt * t_total;
+    t_ub = min(tPts_h{i}) + ubt * t_total;
+    
+    outlier(tPts_h{i} < t_lb) = 1;
+    outlier(tPts_h{i} > t_ub) = 1;
+    
+    t_total = max(tPts{i}) - min(tPts{i});
+    
+    t_lb = min(tPts{i}) + lbt * t_total;
+    t_ub = min(tPts{i}) + ubt * t_total;
+    
+    outlier(tPts{i} < t_lb) = 1;
+    outlier(tPts{i} > t_ub) = 1;
+    
     % Discard outliers, and change drift matrix elements into velocity
 
     driftX{i} = -1 * driftX_t(outlier ~= 1) * slowscan;
@@ -217,6 +236,8 @@ if  ~strcmp(method, 'Drift') % 'Hyst' or 'Both'
         [~, order] = sort(th);
         
         plot(th(order), fit_hyst(order), 'Color', 'black', 'LineWidth', 3);
+        ylabel('Horizontal Scale');
+        xlabel('Time since scan line start (seconds)');
         drawnow;
     end
 end
@@ -260,6 +281,8 @@ if ~strcmp(method, 'Hyst') % 'Drift' or 'Both'
         fit_x = fun_plot_x(Drift_soln);
         
         plot(td(order), fit_x(order), 'Color', 'black', 'LineWidth', 3);
+        ylabel('Fast scan drift velocity (nm/s)');
+        xlabel('Time (seconds)');
         drawnow;
         
         figure;
@@ -271,6 +294,8 @@ if ~strcmp(method, 'Hyst') % 'Drift' or 'Both'
         fit_y = fun_plot_y(Drift_soln);
         
         plot(td(order), fit_y(order), 'Color', 'black', 'LineWidth', 3);
+        ylabel('Slow scan drift velocity (nm/s)');
+        xlabel('Time (seconds)');
         drawnow;
     end
 end

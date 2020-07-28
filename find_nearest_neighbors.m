@@ -1,6 +1,6 @@
 function nn = find_nearest_neighbors(iLoc, jLoc, dist, r_0, varargin)
 
-%     ver 4/10/2017
+%     ver 7/20/2020
 %
 %     copyright (c) 2016 Mitchell P. Yothers & Lloyd A. Bumm
 %
@@ -71,8 +71,8 @@ h = h / mean(h);
 
 options = optimoptions('lsqnonlin', 'Display', 'off');
 
-fun = @(s) s(1) * gaussmf(r, [s(4) s(5)]) + s(2) * gaussmf(r, [s(4) sqrt(3)*s(5)])...
-    + s(3) * gaussmf(r, [s(4) 2*s(5)]) - h;
+fun = @(s) s(1) * exp(-(r - s(5)).^2 ./ 2 ./ s(4).^2) + s(2) * exp(-(r - sqrt(3) .* s(5)).^2 ./ 2 ./ s(4).^2)...
+    + s(3) * exp(-(r - 2 .* s(5)).^2 ./ 2 ./ s(4).^2) - h;
 guess = [5, 5, 5, 0.05, r_0];
 lb = [0, 0, 0, 0, 0.75 .* r_0];
 ub = [10, 10, 10, Inf, 1.25 .* r_0];
@@ -97,7 +97,7 @@ if show_images
     figure;
     bar(r, h, 'FaceColor', [0.5 0.5 0.5], 'EdgeColor', [0.5 0.5 0.5]);
     hold on;
-    plot(r, soln(1) * gaussmf(r, [soln(4) soln(5)]) + soln(2) * gaussmf(r, [soln(4) sqrt(3)*soln(5)])  + soln(3) * gaussmf(r, [soln(4) 2*soln(5)]), 'LineWidth', 2, 'Color', 'Red');
+    plot(r, soln(1) * exp(-(r - soln(5)).^2 ./ 2 ./ soln(4).^2) + soln(2) * exp(-(r - sqrt(3) .* soln(5)).^2 ./ 2 ./ soln(4).^2)  + soln(3) * exp(-(r - 2 .* soln(5)).^2 ./ 2 ./ soln(4).^2), 'LineWidth', 2, 'Color', 'Red');
     plot([nn_threshold(1), nn_threshold(1)], [max(h), 0], 'LineWidth', 2, 'Color', 'Black');
     plot([nn_threshold(2), nn_threshold(2)], [0, max(h)], 'LineWidth', 2, 'Color', 'Black');
     drawnow;

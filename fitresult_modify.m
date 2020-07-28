@@ -1,6 +1,6 @@
 function fitresult_out = fitresult_modify(fitresult, solution_vector, XScale, Period, OrigYPixels, SlowScan, FastScan, xOffset, yOffset) 
 
-%     ver 9/16/2016
+%     ver 7/20/2020
 %
 %     copyright (c) 2016 Mitchell P. Yothers & Lloyd A. Bumm
 %
@@ -88,10 +88,12 @@ end
 
 % Calculate how much each feature is offset
 
-h_t = (double(inth(tPts_h)) - h0) / Period ;
-
-x_t = (double(intx(tPts)) - x0) * dist_to_pix;
-y_t = (double(inty(tPts)) - y0) * dist_to_pix;
+for i = 1:length(tPts)
+    h_t(i) = (double(inth(tPts_h(i))) - h0) / Period ;
+    
+    x_t(i) = (double(intx(tPts(i))) - x0) * dist_to_pix;
+    y_t(i) = (double(inty(tPts(i))) - y0) * dist_to_pix;
+end
 
 % Choose appropriate offset direction
 
@@ -113,3 +115,4 @@ else
     fitresult_out.Y = (fitresult.Y - h_t - x_t) + xOffset;
     fitresult_out.X = (fitresult.X - y_t) + yOffset;
 end
+drawnow;

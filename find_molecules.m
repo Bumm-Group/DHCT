@@ -1,6 +1,6 @@
 function fitresult = find_molecules(raw_image, spacing_guess, varargin)
 
-%     ver 9/1/2016
+%     ver 7/20/2020
 %
 %     copyright (c) 2016 Mitchell P. Yothers & Lloyd A. Bumm
 %
@@ -55,37 +55,55 @@ else
     show_images = 0;
 end
 
-% Value of cross correlation that selects valid surface regions
+radius = round(spacing_guess);
 
-threshold = 0.1;
-
-% Calculate optimal kernel gaussian sigma and size for cross-correlation
-
-radius = round(spacing_guess / 2);
-sigma = radius / 2;
-fprintf('Gaussian template sigma = %3.1f pixels\n', sigma);
-diameter = 2 * radius + 1;
-template = fspecial('gaussian', diameter, sigma);
-
-% Generate cross-correlation image and crop it to original image size
+raw_image = raw_image - min(raw_image(:));
 
 [ImageX, ImageY] = size(raw_image);
 
-raw_xcorr = normxcorr2(template, raw_image);
-xcorr_image = raw_xcorr(radius + (1:ImageX), radius + (1:ImageY));
+k_ave = fspecial('average', 3);
+
+image_s = imfilter(raw_image, k_ave);
+image_s2 = imfilter(image_s, k_ave);
+
+k_lmax = [0, 0, 0; 0, 1, 0; 0, 0, 0];
+
+lmax_image = normxcorr2(k_lmax, image_s2);
+lmax_image = lmax_image(2:end-1, 2:end-1);
+
+lmax_image_s = imfilter(lmax_image, k_ave);
+xcorr_image = -imfilter(lmax_image_s, k_ave);
+
+% % Value of cross correlation that selects valid surface regions
+% 
+% threshold = 0;
+% 
+% % Calculate optimal kernel gaussian sigma and size for cross-correlation
+% 
+% 
+% sigma = radius / 2;
+% fprintf('Gaussian template sigma = %3.1f pixels\n', sigma);
+% 
+% diameter = 2 * radius + 1;
+% template = fspecial('gaussian', diameter, sigma);
+% 
+% % Generate cross-correlation image and crop it to original image size
+% 
+% raw_xcorr = normxcorr2(template, image_s2);
+% xcorr_image = raw_xcorr(radius + (1:ImageX), radius + (1:ImageY));
 
 % Use watershed and threshold to break xcorr into distinct regions
 
-watershed_mask = double(logical(watershed(-xcorr_image)));
+watershed_mask = double(logical(watershed(xcorr_image)));
 
-xcorr_mask = and(watershed_mask, xcorr_image > threshold);
+% xcorr_mask = and(watershed_mask, xcorr_image > threshold);
 
 % Create image with only selected pixels for analysis
 
 image_peak = zeros(ImageX, ImageY);
 x_sub = (radius + 1):(ImageX - radius);
 y_sub = (radius + 1):(ImageY - radius);
-image_peak(x_sub, y_sub) = raw_image(x_sub, y_sub) .* xcorr_mask(x_sub, y_sub);
+image_peak(x_sub, y_sub) = raw_image(x_sub, y_sub) .* watershed_mask(x_sub, y_sub);
 
 % Display selected features (Optional)
 
@@ -135,7 +153,7 @@ end
 
 loc_regions = find(in_range);
 
-for i = 1:sum(in_range)
+for i = 1:num_regions
     pixel_list{i} = regions.PixelIdxList{loc_regions(i)};
 end
 
@@ -163,7 +181,7 @@ fprintf([repmat(' ', 1, 20) '25%% v' repmat(' ', 1, 20) '50%% v' ...
 
 parfor i = 1:num_regions
     
-    out(i, :) = fmgaussfit_reduced(fy{i}, fx{i}, fz{i}, 0); %#ok<*AGROW>
+    [out(i, :), resnorm(i)] = fmgaussfit_reduced(fy{i}, fx{i}, fz{i}, 0); %#ok<*AGROW>
 
     if floor(mod(i, num_regions / 100)) == 0
         fprintf('\b%%\n');
@@ -172,6 +190,7 @@ end
 
 % Assign reasonable names to output structure variables
 
+
 fitresult.Amplitude = out(:, 1).';
 fitresult.Angle = out(:, 2).';
 fitresult.SigmaX = out(:, 3).';
@@ -179,4 +198,7 @@ fitresult.SigmaY = out(:, 4).';
 fitresult.X = out(:, 5).';
 fitresult.Y = out(:, 6).';
 fitresult.Z = out(:, 7).';
+fitresult.resnorm = resnorm;
 fitresult.Index = 1:length(fitresult.X);
+fitresult.AreaPix = area_pix(loc_regions);
+fitresult.PixelList = pixel_list;

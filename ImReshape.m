@@ -1,6 +1,6 @@
 function Image = ImReshape(RectImage, SlowScan, xScaled, yScaled, varargin)
 
-%     ver 9/16/2016
+%     ver 7/20/2020
 %
 %     copyright (c) 2016 Mitchell P. Yothers & Lloyd A. Bumm
 %
@@ -44,7 +44,9 @@ function Image = ImReshape(RectImage, SlowScan, xScaled, yScaled, varargin)
 
 % Set lowest image pixel value to zero
 
-RectImage = RectImage - min(RectImage(:));
+if min(RectImage(:)) ~= max(RectImage(:))
+    RectImage = RectImage - min(RectImage(:));
+end
 
 % Add a row of zero pixels to the edges of the image to smoothly transition
 % into the area with no data
